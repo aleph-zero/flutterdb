@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "flutterdb.fullname" . }}-membership
+  labels:
+    {{- include "flutterdb.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.membershipService.type }}
+  ports:
+    - port: {{ .Values.membershipService.port }}
+      targetPort: membership
+      protocol: TCP
+      name: membership
+  selector:
+    {{- include "flutterdb.selectorLabels" . | nindent 4 }}

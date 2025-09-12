@@ -1,0 +1,77 @@
+{
+  "tables": {
+    "books": {
+      "table": "books",
+      "columns": {
+        "author": {
+          "column": "author",
+          "type": "KEYWORD"
+        },
+        "published": {
+          "column": "published",
+          "type": "DATETIME",
+          "options": {
+            "format": "DateOnly"
+          }
+        },
+        "summary": {
+          "column": "summary",
+          "type": "TEXT"
+        },
+        "title": {
+          "column": "title",
+          "type": "KEYWORD"
+        }
+      },
+      "directory": "/Users/andrew/src/andrew/flutterdb/testdata/metastore/data/books"
+    },
+    "cities": {
+      "table": "cities",
+      "columns": {
+        "city": {
+          "column": "city",
+          "type": "KEYWORD"
+        },
+        "description": {
+          "column": "description",
+          "type": "TEXT"
+        },
+        "population": {
+          "column": "population",
+          "type": "INTEGER"
+        }
+      },
+      "directory": "/Users/andrew/src/andrew/flutterdb/testdata/metastore/data/cities"
+    },
+    "t1": {
+      "table": "t1",
+      "columns": {
+        "c1": {
+          "column": "c1",
+          "type": "KEYWORD"
+        },
+        "c2": {
+          "column": "c2",
+          "type": "TEXT"
+        },
+        "c3": {
+          "column": "c3",
+          "type": "INTEGER"
+        },
+        "c4": {
+          "column": "c4",
+          "type": "FLOAT"
+        },
+        "c5": {
+          "column": "c5",
+          "type": "GEOPOINT"
+        },
+        "c6": {
+          "column": "c6",
+          "type": "DATETIME"
+        }
+      },
+      "directory": "/Users/andrew/src/andrew/flutterdb/testdata/metastore/data/t1"
+    }
+  }
+}

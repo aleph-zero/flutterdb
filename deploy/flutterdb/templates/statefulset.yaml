@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "flutterdb.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "flutterdb.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{ include "flutterdb.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "flutterdb.fullname" . }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      name: {{ include "flutterdb.fullname" . }}
+      labels: {{ include "flutterdb.labels" . | nindent 8 }}
+    spec:
+      initContainers:
+      - name: {{ include "flutterdb.fullname" . }}-config-init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command:          
+          - /bin/sh
+          - -c
+          - |-
+            ID=$(echo $HOSTNAME | rev | cut -d- -f1 | rev)
+            cat <<EOF > /var/run/flutterdb/config.yaml
+            server:
+              addr: "0.0.0.0"
+              port: {{ .Values.apiService.port }}
+            cluster:
+              node-name: $HOSTNAME
+              membership-listen-addr: "$HOSTNAME.flutterdb.{{.Release.Namespace}}.svc.cluster.local"
+              membership-listen-port: {{.Values.membershipService.port}}
+              bootstrap: $([ $ID = 0 ] && echo true || echo false)
+              $([ $ID != 0 ] && echo 'membership-join-addrs: ["flutterdb-0.flutterdb.{{.Release.Namespace}}.svc.cluster.local:{{.Values.membershipService.port}}" ]')
+            EOF
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/flutterdb
+      containers:
+      - name: {{ include "flutterdb.fullname" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.apiService.port }}
+          name: api
+        - containerPort: {{ .Values.membershipService.port }}
+          name: membership
+        args:
+          - --config=/var/run/flutterdb/config.yaml
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.apiService.port }}
+            path: /heartbeat
+          initialDelaySeconds: 3
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.apiService.port }}
+            path: /heartbeat
+          initialDelaySeconds: 3
+        volumeMounts:
+        - name: datadir
+          mountPath: /var/run/flutterdb
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.storage }}

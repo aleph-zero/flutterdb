@@ -12,17 +12,17 @@ Setup load balancing:
 See instructions: https://github.com/kubernetes-sigs/cloud-provider-kind.
 
 Install via Helm:
-```kubectl create namespace andrewdb```
-```helm install --namespace andrewdb andrewdb deploy/andrewdb```
+```kubectl create namespace flutterdb```
+```helm install --namespace flutterdb flutterdb deploy/flutterdb```
 
 To exec into a running container:
-```kubectl exec -n andrewdb -it andrewdb-0 -- /bin/sh```
+```kubectl exec -n flutterdb -it flutterdb-0 -- /bin/sh```
 
 To test the API:
-[andryushka andrewdb] [10:03:41] > kubectl get svc -n andrewdb
+[andryushka flutterdb] [10:03:41] > kubectl get svc -n flutterdb
 NAME                  TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-andrewdb              LoadBalancer   10.96.11.164    172.20.0.6    1234:30821/TCP   72s
-andrewdb-membership   ClusterIP      10.96.123.163   <none>        7777/TCP         72s
+flutterdb              LoadBalancer   10.96.11.164    172.20.0.6    1234:30821/TCP   72s
+flutterdb-membership   ClusterIP      10.96.123.163   <none>        7777/TCP         72s
 
 curl -XGET 'http://172.20.0.6:5678/identity'
 
@@ -34,6 +34,6 @@ export OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4318
 
 ### Loading test data
 
-andrewdb client indexer --client.indexer.file ./testdata/documents/cities.ndjson --client.indexer.index cities
-andrewdb client indexer --client.indexer.file ./testdata/documents/books.ndjson --client.indexer.index books
+flutterdb client indexer --client.indexer.file ./testdata/documents/cities.ndjson --client.indexer.index cities
+flutterdb client indexer --client.indexer.file ./testdata/documents/books.ndjson --client.indexer.index books
 
