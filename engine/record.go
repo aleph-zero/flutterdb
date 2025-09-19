@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/google/uuid"
     "sort"
+    "strconv"
     "strings"
     "time"
 )
@@ -119,6 +120,7 @@ const (
     Float
     DateTime
     GeoPoint
+    Boolean
 )
 
 func (k Kind) String() string {
@@ -133,6 +135,8 @@ func (k Kind) String() string {
         return "datetime"
     case GeoPoint:
         return "geopoint"
+    case Boolean:
+        return "boolean"
     default:
         return "invalid"
     }
@@ -147,6 +151,7 @@ type Value struct {
     f float64
     t time.Time
     g GeoPointValue
+    b bool
 }
 
 // --- Constructors ---
@@ -154,22 +159,124 @@ type Value struct {
 func NewStringValue(v string) Value  { return Value{k: String, s: v} }
 func NewIntValue(v int64) Value      { return Value{k: Int, i: v} }
 func NewFloatValue(v float64) Value  { return Value{k: Float, f: v} }
+func NewBooleanValue(v bool) Value   { return Value{k: Boolean, b: v} }
 func NewTimeValue(v time.Time) Value { return Value{k: DateTime, t: v} }
 func NewGeoPointValue(lat, lon float64) Value {
     return Value{k: GeoPoint, g: GeoPointValue{lat: lat, lon: lon}}
 }
-func InvalidValue() Value { return Value{} }
 
 // --- Introspection ---
 
 func (v Value) Kind() Kind    { return v.k }
 func (v Value) IsValid() bool { return v.k != Invalid }
 
+func (v Value) CanInt() bool {
+    switch v.k {
+    case Float:
+        return false
+    case Int:
+        return true
+    case String:
+        if _, err := strconv.ParseFloat(v.s, 64); err != nil {
+            return false
+        }
+        return true
+    case Boolean:
+        return true
+    default:
+        return false
+    }
+}
+
+func (v Value) CanFloat() bool {
+    switch v.k {
+    case Float:
+        return true
+    case Int:
+        return true
+    case String:
+        if _, err := strconv.ParseFloat(v.s, 64); err == nil {
+            return true
+        }
+        return false
+    case Boolean:
+        return true
+    default:
+        return false
+    }
+}
+
+// --- Conversion ---
+
+func (v Value) ToInt() int64 {
+    switch v.k {
+    case Float:
+        panic("attempt to convert float to int")
+    case Int:
+        return v.i
+    case String:
+        i, err := strconv.ParseInt(v.s, 10, 64)
+        if err != nil {
+            return 0
+        }
+        return i
+    case Boolean:
+        if v.b {
+            return 1
+        }
+        return 0
+    default:
+        return 0
+    }
+}
+
+func (v Value) ToFloat() float64 {
+    switch v.k {
+    case Float:
+        return v.f
+    case Int:
+        return float64(v.i)
+    case String:
+        v, err := strconv.ParseFloat(v.s, 64)
+        if err != nil {
+            return 0
+        }
+        return v
+    case Boolean:
+        if v.b {
+            return 1.0
+        }
+        return 0.0
+    default:
+        return 0.0
+    }
+}
+
+func (v Value) ToBoolean() bool {
+    switch v.k {
+    case Int:
+        return v.i != 0
+    case Float:
+        return v.f != 0
+    case Boolean:
+        return v.b
+    case String:
+        i, err := strconv.ParseInt(v.s, 10, 64)
+        if err != nil {
+            return false
+        }
+        return i != 0
+    default:
+        return false
+    }
+}
+
 // --- Accessors (type-safe) ---
 
 func (v Value) StringVal() (string, bool)          { return v.s, v.k == String }
 func (v Value) IntVal() (int64, bool)              { return v.i, v.k == Int }
 func (v Value) FloatVal() (float64, bool)          { return v.f, v.k == Float }
+func (v Value) BooleanVal() (bool, bool)           { return v.b, v.k == Boolean }
 func (v Value) TimeVal() (time.Time, bool)         { return v.t, v.k == DateTime }
 func (v Value) GeoPointVal() (GeoPointValue, bool) { return v.g, v.k == GeoPoint }
 
@@ -193,6 +300,12 @@ func (v Value) MustFloat() float64 {
     }
     return v.f
 }
+func (v Value) MustBoolean() bool {
+    if v.k != Boolean {
+        panic("not boolean")
+    }
+    return v.b
+}
 func (v Value) MustTime() time.Time {
     if v.k != DateTime {
         panic("not time")
@@ -215,6 +328,8 @@ func (v Value) String() string {
         return fmt.Sprintf("%d", v.i)
     case Float:
         return fmt.Sprintf("%g", v.f)
+    case Boolean:
+        return fmt.Sprintf("%t", v.b)
     case DateTime:
         return v.t.Format(time.RFC3339Nano)
     case GeoPoint:

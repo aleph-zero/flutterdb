@@ -9,12 +9,13 @@
 6. Clean up client logic. We can run `flutterdb client` and it will start even though it does not know where to connect to
 7. OTEL: Looks like the implementation is such that the client actually connects to an OTEL collector. Need to refactor so that it does not need this and only propagates trace context via headers.
 8. Symbol resolution tests non-deterministically fail. Fix
-9. Implement LIMIT logic
 10. For SELECT statements with no table, for instance 'SELECT 1', we can insert a DummyTable struct type to make query planning and processing easier.
 11. Constant expression optimization does not work in SELECT predicates with AND/OR/NOT
 12. Add unique query ID to each query so we can track via logs
 13. Physical plan operators must have a close() method in order to shut down the channels and stop the go routines
 14. Fun project: Add operator statistics for each operator type and export as OTEL metrics
+15. Why do we have a 10 second timeout in server.Bootstrap()? ctx, shutdown := context.WithTimeout(context.Background(), 10*time.Second)
+16. Refactor logical plan construction to use the visitor pattern that we use in the physical plan construction so that we are not in a mess of if/else statements.
 
 ### Running with OpenTelemetry
 Before running the server set the address of the collector:

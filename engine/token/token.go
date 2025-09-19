@@ -12,39 +12,62 @@ type TokenType int
 
 const (
     IDENTIFIER TokenType = iota
+
+    /* data type token types */
+
     INTEGER
     FLOAT
     STRING
+    TEXT
+    KEYWORD
+    GEOPOINT
+    DATETIME
+
+    /* syntactical token types */
+
     COMMA
     L_PAREN
     R_PAREN
+    BANG
+
+    /* sql keyword token types */
+
     SELECT
     FROM
     WHERE
     CREATE
     TABLE
+    LIMIT
+    PARTITION
+    BY
+    ORDER
+    LIKE
+
+    /* arithmetic token types */
+
     ASTERISK
     PLUS
     MINUS
     DIVIDE
     MODULO
+
+    /* comparison token types */
+
     EQUAL
     NOT_EQUAL
     GT
     GTE
     LT
     LTE
-    BANG
+
+    /* logical token types */
+
     AND
     OR
     NOT
-    LIMIT
-    PARTITION
-    BY
-    TEXT
-    KEYWORD
-    GEOPOINT
-    DATETIME
+
+    /* misc token types */
+
     EOF
 )
 
@@ -54,14 +77,24 @@ func (t TokenType) String() string {
         "INTEGER",
         "FLOAT",
         "STRING",
+        "TEXT",
+        "KEYWORD",
+        "GEOPOINT",
+        "DATETIME",
         "COMMA",
         "L_PAREN",
         "R_PAREN",
+        "BANG",
         "SELECT",
         "FROM",
         "WHERE",
         "CREATE",
         "TABLE",
+        "LIMIT",
+        "PARTITION",
+        "BY",
+        "ORDER",
+        "LIKE",
         "ASTERISK",
         "PLUS",
         "MINUS",
@@ -73,16 +106,8 @@ func (t TokenType) String() string {
         "GTE",
         "LT",
         "LTE",
-        "BANG",
         "AND",
         "OR",
         "NOT",
-        "LIMIT",
-        "PARTITION",
-        "BY",
-        "TEXT",
-        "KEYWORD",
-        "GEOPOINT",
-        "DATETIME",
         "EOF"}[t]
 }

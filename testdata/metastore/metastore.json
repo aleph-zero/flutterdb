@@ -71,7 +71,7 @@
           "type": "DATETIME"
         }
       },
-      "directory": "/Users/andrew/src/andrew/flutterdb/testdata/metastore/data/t1"
+      "directory": "./data/t1"
     }
   }
 }
