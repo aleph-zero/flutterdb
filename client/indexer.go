@@ -10,7 +10,6 @@ import (
     "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/trace"
-    "log/slog"
     "net/http"
     "os"
     "time"
@@ -56,11 +55,6 @@ func WithClientConfig(clientConfig *Config) IndexerOption {
 
 func BootstrapIndexer(config *IndexerConfig) {
     ctx := context.Background()
-    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-        Level: slog.LevelInfo,
-    }))
-    slog.SetDefault(logger)
-
     shutdown, _ := telemetry.New(serviceName, serviceVersion, collectorURL)
     defer shutdown()
 
@@ -73,13 +67,13 @@ func BootstrapIndexer(config *IndexerConfig) {
     }
 
     if _, err := os.Stat(config.Filename); os.IsNotExist(err) {
-        slog.Error("File does not exist", "filename", config.Filename)
+        fmt.Printf("Config file '%s' does not exist\n", config.Filename)
         return
     }
 
     file, err := os.Open(config.Filename)
     if err != nil {
-        slog.Error("Error opening file", "filename", config.Filename, "error", err)
+        fmt.Printf("Error opening file '%s': %s\n", config.Filename, err)
         return
     }
     defer file.Close()
@@ -97,7 +91,7 @@ func indexFile(ctx context.Context, endpoint string, client http.Client, file *o
         var record map[string]interface{}
         line := scanner.Text()
         if err := json.Unmarshal([]byte(line), &record); err != nil {
-            slog.Error("Error unmarshalling json", "line", line, "error", err)
+            fmt.Printf("Error unmarshalling json: %s\n", err)
             continue
         }
         batch = append(batch, record)
@@ -105,7 +99,7 @@ func indexFile(ctx context.Context, endpoint string, client http.Client, file *o
 
         if count >= batchSize {
             if err := submitBatch(ctx, endpoint, client, batch, batchNum); err != nil {
-                slog.Error("Error sending batch", "batch", batchNum, "error", err)
+                fmt.Printf("Error sending batch: %s\n", err)
             }
             batch = nil
             count = 0
@@ -115,12 +109,12 @@ func indexFile(ctx context.Context, endpoint string, client http.Client, file *o
 
     if len(batch) > 0 {
         if err := submitBatch(ctx, endpoint, client, batch, batchNum); err != nil {
-            slog.Error("Error sending batch", "batch", batchNum, "error", err)
+            fmt.Printf("Error sending batch: %s\n", err)
         }
     }
 
     if err := scanner.Err(); err != nil {
-        slog.Error("Error scanning file", "file", file.Name(), "error", err)
+        fmt.Printf("Error scanning file: %s\n", err)
     }
 }
 
@@ -131,21 +125,21 @@ func submitBatch(ctx context.Context, endpoint string, client http.Client, batch
 
     data, err := json.Marshal(batch)
     if err != nil {
-        slog.Error("Error marshalling batch", "batch", batchNum, "error", err)
+        return err
     }
 
     req, err := http.NewRequestWithContext(traceCtx, http.MethodPost, endpoint, bytes.NewReader(data))
     if err != nil {
-        return fmt.Errorf("HTTP POST failed: %w", err)
+        return err
     }
     req.Header.Set("Content-Type", "application/json")
 
     resp, err := client.Do(req)
     if err != nil {
-        return fmt.Errorf("HTTP POST failed: %w", err)
+        return err
     }
     defer resp.Body.Close()
 
-    slog.Info("Batch sent", "batch", batchNum, "status", resp.Status)
+    fmt.Printf("Batch %d sent; status received: %d", batchNum, resp.Status)
     return nil
 }

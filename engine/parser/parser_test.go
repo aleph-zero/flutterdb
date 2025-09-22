@@ -12,11 +12,10 @@ import (
 )
 
 func TestParser_ParseCreateStatement(t *testing.T) {
-
     tests := []struct {
         stmt string
     }{
-        {`CREATE TABLE t (c1 KEYWORD) `},
+        {`CREATE TABLE t (c1 KEYWORD)`},
         {`CREATE TABLE t (c1 TEXT, c2 KEYWORD, c3 INTEGER, c4 FLOAT, c5 DATETIME, c6 GEOPOINT)`},
         {`CREATE TABLE t (c1 KEYWORD, c2 INTEGER) PARTITION BY c1`},
     }
@@ -33,8 +32,26 @@ func TestParser_ParseCreateStatement(t *testing.T) {
     }
 }
 
-func TestParser_ParseStatements(t *testing.T) {
+func TestParser_ParseShowTablesStatement(t *testing.T) {
+    tests := []struct {
+        stmt string
+    }{
+        {`SHOW TABLES`},
+    }
 
+    for _, tt := range tests {
+        t.Run(tt.stmt, func(t *testing.T) {
+            fmt.Println("testing: ", tt.stmt)
+            root, err := parse(tt.stmt)
+            if err != nil {
+                t.Error(err)
+            }
+            fmt.Printf("node: %v+\n", root)
+        })
+    }
+}
+
+func TestParser_ParseStatements(t *testing.T) {
     tests := []struct {
         stmt     string
         expected *ast.SelectStatementNode

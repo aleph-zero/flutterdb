@@ -7,6 +7,7 @@ import (
     "github.com/aleph-zero/flutterdb/service/index"
     "github.com/aleph-zero/flutterdb/service/metastore"
     log "github.com/go-chi/httplog/v2"
+    "sync"
 )
 
 type QueryPlan struct {
@@ -24,18 +25,21 @@ func NewQueryPlan(metaSvc metastore.Service, indexSvc index.Service, plan *logic
 func (plan *QueryPlan) Execute(ctx context.Context) ([]*engine.Result, error) {
     log.LogEntry(ctx).Info("Executing query", "queryId", engine.QueryIdFromContext(ctx))
     results := make([]*engine.Result, 0)
+    var wg sync.WaitGroup
 
-    go func() {
+    wg.Go(func() {
         for result := range plan.RootOperator.Sink() {
-            log.LogEntry(ctx).Info("EXECUTE RESULT", "result", result.Record.String())
             results = append(results, result)
         }
-    }()
+        log.LogEntry(ctx).Info("Query plan executor finished reading results", "queryId", engine.QueryIdFromContext(ctx))
+    })
 
     opener := &OperatorNodeOpener{}
     if err := plan.RootOperator.Accept(ctx, opener); err != nil {
         return nil, err
     }
+
+    wg.Wait()
     return results, nil
 }
 
@@ -45,6 +49,7 @@ type OperatorNodeVisitor interface {
     VisitProjectOperator(context.Context, *ProjectOperator) error
     VisitScanOperator(context.Context, *ScanOperator) error
     VisitCreateOperator(context.Context, *CreateOperator) error
+    VisitShowTablesOperator(context.Context, *ShowTablesOperator) error
 }
 
 type OperatorNode interface {
@@ -83,7 +88,10 @@ func (op *OperatorNodeOpener) VisitScanOperator(ctx context.Context, operator *S
 }
 
 func (op *OperatorNodeOpener) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
-    //TODO implement me
+    panic("implement me")
+}
+
+func (op *OperatorNodeOpener) VisitShowTablesOperator(ctx context.Context, operator *ShowTablesOperator) error {
     panic("implement me")
 }
 
@@ -100,11 +108,21 @@ func (lpv *LogicalPlanVisitor) VisitTableNode(node *logical.TableNode) error {
     return nil
 }
 
+func (lpv *LogicalPlanVisitor) VisitTablesNode(node *logical.TablesNode) error {
+    lpv.operator = NewShowTablesOperator()
+    return nil
+}
+
 func (lpv *LogicalPlanVisitor) VisitProjectNode(node *logical.ProjectNode) error {
     if err := node.Child().Accept(lpv); err != nil {
         return err
     }
-    lpv.operator = NewProjectOperator(lpv.operator)
+
+    columns := make([]string, len(node.Projections()))
+    for i, projection := range node.Projections() {
+        columns[i] = projection.String()
+    }
+    lpv.operator = NewProjectOperator(lpv.operator, columns)
     return nil
 }
 

@@ -4,6 +4,7 @@ type Visitor interface {
     VisitSelectStatementNode(*SelectStatementNode) error
     VisitPredicateNode(*PredicateNode) error
     VisitCreateTableStatementNode(*CreateTableStatementNode) error
+    VisitShowTablesStatementNode(*ShowTablesStatementNode) error
     VisitColumnDefinitionNode(*ColumnDefinitionNode) error
 
     VisitTableIdentifierNode(*TableIdentifierNode) error

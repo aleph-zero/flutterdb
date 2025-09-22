@@ -27,3 +27,4 @@ go.work.sum
 .idea
 otel-collector.yaml
 testdata/metastore/data/
+flutterdb

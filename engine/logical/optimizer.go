@@ -12,7 +12,7 @@ import (
 
 func OptimizeQueryPlan(plan *QueryPlan) (*QueryPlan, error) {
     switch plan.ProjectNode.Child().(type) {
-    case *TableNode:
+    case *TableNode, *TablesNode:
         return plan, nil
     default:
         rules := []OptimizationRule{NewConstantExpressionEvaluator()}
@@ -187,6 +187,10 @@ func (c *ConstantExpressionEvaluator) VisitPredicateNode(node *ast.PredicateNode
 }
 
 func (c *ConstantExpressionEvaluator) VisitCreateTableStatementNode(node *ast.CreateTableStatementNode) error {
+    return fmt.Errorf("cannot optimize node type %T", node)
+}
+
+func (c *ConstantExpressionEvaluator) VisitShowTablesStatementNode(node *ast.ShowTablesStatementNode) error {
     return fmt.Errorf("cannot optimize node type %T", node)
 }
 

@@ -16,6 +16,8 @@
 14. Fun project: Add operator statistics for each operator type and export as OTEL metrics
 15. Why do we have a 10 second timeout in server.Bootstrap()? ctx, shutdown := context.WithTimeout(context.Background(), 10*time.Second)
 16. Refactor logical plan construction to use the visitor pattern that we use in the physical plan construction so that we are not in a mess of if/else statements.
+17. Should engine.HitCollector be moved into package index and out of package engine?
+18. Projection on expressions does not work. This statement: "SELECT 1+2" does not work. 
 
 ### Running with OpenTelemetry
 Before running the server set the address of the collector:

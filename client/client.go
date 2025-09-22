@@ -5,13 +5,14 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "github.com/aleph-zero/flutterdb/engine"
+    "github.com/aleph-zero/flutterdb/service/query"
     "github.com/aleph-zero/flutterdb/telemetry"
     "github.com/chzyer/readline"
     "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
     "go.opentelemetry.io/otel"
     "go.opentelemetry.io/otel/trace"
     "io"
-    "log/slog"
     "net/http"
     "os"
     "path/filepath"
@@ -54,16 +55,7 @@ func WithRemotePort(port uint16) Option {
 
 func Bootstrap(config *Config) {
     ctx := context.Background()
-    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-        Level: slog.LevelInfo,
-    }))
-    slog.SetDefault(logger)
-
-    rl, err := setupReadline()
-    if err != nil {
-        slog.Error("Error setting up readline config", "error", err)
-        return
-    }
+    rl, _ := setupReadline()
     defer rl.Close()
 
     shutdown, _ := telemetry.New(serviceName, serviceVersion, collectorURL)
@@ -92,7 +84,9 @@ func Bootstrap(config *Config) {
         if stmt == "" {
             continue
         }
-        submit(ctx, client, endpoint, stmt)
+        if err := submit(ctx, client, endpoint, stmt); err != nil {
+            fmt.Printf("Error submitting statement: %s\n", err)
+        }
     }
 }
 
@@ -116,13 +110,16 @@ func submit(ctx context.Context, client http.Client, endpoint, statement string)
     }
     defer res.Body.Close()
 
-    var results []map[string]interface{}
+    var results query.QueryResult
     err = json.NewDecoder(res.Body).Decode(&results)
     if err != nil {
         return err
     }
 
-    fmt.Printf("Results: %+v\n", results)
+    fmt.Printf(engine.RenderASCIITable(results.Records, &engine.RenderOptions{
+        MaxWidth: 80,
+        Overflow: engine.Wrap,
+    }))
     return nil
 }
 
@@ -139,7 +136,7 @@ func setupReadline() (rl *readline.Instance, err error) {
     }
 
     return readline.NewEx(&readline.Config{
-        Prompt:            "\033[31mflutterdb > \033[0m ",
+        Prompt:            "\033[32mflutterdb>\033[0m ",
         HistoryFile:       filepath.Join(dir, "flutterdb.history"),
         InterruptPrompt:   "^C",
         EOFPrompt:         "exit",

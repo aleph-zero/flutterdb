@@ -24,6 +24,8 @@ var patterns = []TokenPattern{
     {regex: regexp.MustCompile(`(?i)^NOT$`), TokenType: token.NOT},
     {regex: regexp.MustCompile(`(?i)^LIMIT$`), TokenType: token.LIMIT},
     {regex: regexp.MustCompile(`(?i)^LIKE$`), TokenType: token.LIKE},
+    {regex: regexp.MustCompile(`(?i)^SHOW$`), TokenType: token.SHOW},
+    {regex: regexp.MustCompile(`(?i)^TABLES$`), TokenType: token.TABLES},
     {regex: regexp.MustCompile(`(?i)^PARTITION$`), TokenType: token.PARTITION},
     {regex: regexp.MustCompile(`(?i)^ORDER$`), TokenType: token.ORDER},
     {regex: regexp.MustCompile(`(?i)^BY$`), TokenType: token.BY},

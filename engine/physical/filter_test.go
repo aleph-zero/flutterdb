@@ -133,6 +133,9 @@ func (f *FilterOperatorFinder) VisitScanOperator(ctx context.Context, operator *
 func (f *FilterOperatorFinder) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
     return nil
 }
+func (f *FilterOperatorFinder) VisitShowTablesOperator(ctx context.Context, operator *ShowTablesOperator) error {
+    return nil
+}
 
 func recordWithValues(values map[string]engine.Value) *engine.Record {
     r := engine.NewRecord()

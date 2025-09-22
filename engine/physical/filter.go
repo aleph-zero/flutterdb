@@ -291,6 +291,10 @@ func (pe *PredicateEvaluator) VisitCreateTableStatementNode(node *ast.CreateTabl
     return fmt.Errorf("cannot evaluate node type '%T'", node)
 }
 
+func (pe *PredicateEvaluator) VisitShowTablesStatementNode(node *ast.ShowTablesStatementNode) error {
+    return fmt.Errorf("cannot evaluate node type '%T'", node)
+}
+
 func (pe *PredicateEvaluator) VisitColumnDefinitionNode(node *ast.ColumnDefinitionNode) error {
     return fmt.Errorf("cannot evaluate node type '%T'", node)
 }

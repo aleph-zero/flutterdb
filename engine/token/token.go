@@ -42,6 +42,8 @@ const (
     BY
     ORDER
     LIKE
+    SHOW
+    TABLES
 
     /* arithmetic token types */
 
@@ -95,6 +97,8 @@ func (t TokenType) String() string {
         "BY",
         "ORDER",
         "LIKE",
+        "SHOW",
+        "TABLES",
         "ASTERISK",
         "PLUS",
         "MINUS",

@@ -11,6 +11,7 @@ import (
 /*
    statement                -> select_statement
                             | create_table_statement
+                            | show_tables_statement
    select_statement         -> 'SELECT' projections ('FROM' IDENTIFIER)? ('WHERE' disjunction)? ('LIMIT' INTEGER)?
    projections              -> disjunction (',' disjunction)*
                             | '*'
@@ -27,6 +28,7 @@ import (
                             | '(' disjunction ')' ;
 
    create_table_statement   -> 'CREATE' 'TABLE' IDENTIFIER '(' columns ')' ('PARTITION BY' IDENTIFIER)?
+   show_tables_statement    -> 'SHOW' 'TABLES'
    columns                  -> column_definition (',' column_definition)*
    column_definition        -> IDENTIFIER ('TEXT'|'KEYWORD'|'INTEGER'|'FLOAT'|'GEOPOINT'|'DATETIME')
 */
@@ -61,12 +63,24 @@ func (p *Parser) statement() (ast.VisitableNode, error) {
             }
         }
         return p.createTableStatement()
+    case p.match(token.SHOW):
+        if !p.match(token.TABLES) {
+            return nil, ParseError{
+                Expected: []token.TokenType{token.TABLES},
+                Received: p.peek(),
+            }
+        }
+        return p.showTablesStatement()
     default:
         return nil, ParseError{
             Expected: []token.TokenType{token.SELECT, token.CREATE},
             Received: p.peek(),
         }
     }
+}
+
+func (p *Parser) showTablesStatement() (ast.VisitableNode, error) {
+    return ast.NewShowTablesStatementNode(), nil
 }
 
 func (p *Parser) createTableStatement() (ast.VisitableNode, error) {

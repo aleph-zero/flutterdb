@@ -1,277 +1,303 @@
 package ast
 
 import (
-	"github.com/aleph-zero/flutterdb/engine/token"
-	"github.com/aleph-zero/flutterdb/engine/types"
-	"github.com/aleph-zero/flutterdb/service/metastore"
-	"strconv"
+    "fmt"
+    "github.com/aleph-zero/flutterdb/engine/token"
+    "github.com/aleph-zero/flutterdb/engine/types"
+    "github.com/aleph-zero/flutterdb/service/metastore"
+    "strconv"
 )
 
 type VisitableNode interface {
-	Accept(visitor Visitor) error
+    Accept(visitor Visitor) error
 }
 
 type ExpressionNode interface {
-	Expression()
-	VisitableNode
+    Expression()
+    String() string
+    VisitableNode
 }
 
 func IsLiteralNode(n ExpressionNode) bool {
-	switch n.(type) {
-	case *IntegerLiteralNode, *FloatLiteralNode, *StringLiteralNode:
-		return true
-	default:
-		return false
-	}
+    switch n.(type) {
+    case *IntegerLiteralNode, *FloatLiteralNode, *StringLiteralNode:
+        return true
+    default:
+        return false
+    }
 }
 
 type NumericNode interface {
-	ExpressionNode
-	CanInt() bool
-	CanFloat() bool
-	ToInt64() int64
-	ToFloat64() float64
+    ExpressionNode
+    CanInt() bool
+    CanFloat() bool
+    ToInt64() int64
+    ToFloat64() float64
 }
 
 type SelectStatementNode struct {
-	Expressions []ExpressionNode
-	Table       *TableIdentifierNode
-	Predicate   *PredicateNode
-	Limit       *LimitNode
+    Expressions []ExpressionNode
+    Table       *TableIdentifierNode
+    Predicate   *PredicateNode
+    Limit       *LimitNode
 }
 
 func NewSelectStatementNode(expressions []ExpressionNode) *SelectStatementNode {
-	return &SelectStatementNode{Expressions: expressions}
+    return &SelectStatementNode{Expressions: expressions}
 }
 
 func (n *SelectStatementNode) Accept(visitor Visitor) error {
-	return visitor.VisitSelectStatementNode(n)
+    return visitor.VisitSelectStatementNode(n)
 }
 
 type TableIdentifierNode struct {
-	Value               string
-	ResolvedTableSymbol *metastore.TableScopeSymbolTableEntry
+    Value               string
+    ResolvedTableSymbol *metastore.TableScopeSymbolTableEntry
 }
 
 func NewTableIdentifierNode(value string) *TableIdentifierNode {
-	return &TableIdentifierNode{Value: value}
+    return &TableIdentifierNode{Value: value}
 }
 
 func (n *TableIdentifierNode) Accept(visitor Visitor) error {
-	if n != nil {
-		return visitor.VisitTableIdentifierNode(n)
-	}
-	return nil
+    if n != nil {
+        return visitor.VisitTableIdentifierNode(n)
+    }
+    return nil
 }
 
 type ColumnIdentifierNode struct {
-	Value                string
-	ResolvedColumnSymbol *metastore.ColumnScopeSymbolTableEntry
+    Value                string
+    ResolvedColumnSymbol *metastore.ColumnScopeSymbolTableEntry
 }
 
 func NewColumnIdentifierNode(value string) *ColumnIdentifierNode {
-	return &ColumnIdentifierNode{Value: value}
+    return &ColumnIdentifierNode{Value: value}
 }
 
-func (n *ColumnIdentifierNode) Expression() {}
+func (n *ColumnIdentifierNode) Expression()    {}
+func (n *ColumnIdentifierNode) String() string { return n.Value }
 
 func (n *ColumnIdentifierNode) Accept(visitor Visitor) error {
-	if n != nil {
-		return visitor.VisitColumnIdentifierNode(n)
-	}
-	return nil
+    if n != nil {
+        return visitor.VisitColumnIdentifierNode(n)
+    }
+    return nil
 }
 
 type PredicateNode struct {
-	Node ExpressionNode
+    Node ExpressionNode
 }
 
 func NewPredicateNode(node ExpressionNode) *PredicateNode {
-	return &PredicateNode{Node: node}
+    return &PredicateNode{Node: node}
 }
 
 func (n *PredicateNode) Accept(visitor Visitor) error {
-	if n != nil {
-		return visitor.VisitPredicateNode(n)
-	}
-	return nil
+    if n != nil {
+        return visitor.VisitPredicateNode(n)
+    }
+    return nil
+}
+
+type ShowTablesStatementNode struct{}
+
+func NewShowTablesStatementNode() *ShowTablesStatementNode {
+    return &ShowTablesStatementNode{}
+}
+
+func (n *ShowTablesStatementNode) Accept(visitor Visitor) error {
+    return visitor.VisitShowTablesStatementNode(n)
 }
 
 type CreateTableStatementNode struct {
-	Table             string
-	ColumnDefinitions []VisitableNode
-	Partition         string
+    Table             string
+    ColumnDefinitions []VisitableNode
+    Partition         string
 }
 
 func NewCreateTableStatementNode(name string, cds []VisitableNode, partition string) *CreateTableStatementNode {
-	return &CreateTableStatementNode{
-		Table:             name,
-		ColumnDefinitions: cds,
-		Partition:         partition,
-	}
+    return &CreateTableStatementNode{
+        Table:             name,
+        ColumnDefinitions: cds,
+        Partition:         partition,
+    }
 }
 
 func (n *CreateTableStatementNode) Accept(visitor Visitor) error {
-	return visitor.VisitCreateTableStatementNode(n)
+    return visitor.VisitCreateTableStatementNode(n)
 }
 
 type ColumnDefinitionNode struct {
-	Value string
-	Type  types.Type
+    Value string
+    Type  types.Type
 }
 
 func NewColumnDefinitionNode(name string, typ types.Type) *ColumnDefinitionNode {
-	return &ColumnDefinitionNode{
-		Value: name,
-		Type:  typ,
-	}
+    return &ColumnDefinitionNode{
+        Value: name,
+        Type:  typ,
+    }
 }
 
 func (n *ColumnDefinitionNode) Accept(visitor Visitor) error {
-	return visitor.VisitColumnDefinitionNode(n)
+    return visitor.VisitColumnDefinitionNode(n)
 }
 
 type ParenthesizedExpressionNode struct {
-	Node ExpressionNode
+    Node ExpressionNode
 }
 
 func NewParenthesizedExpressionNode(node ExpressionNode) *ParenthesizedExpressionNode {
-	return &ParenthesizedExpressionNode{Node: node}
+    return &ParenthesizedExpressionNode{Node: node}
 }
 
-func (n *ParenthesizedExpressionNode) Expression() {}
+func (n *ParenthesizedExpressionNode) Expression()    {}
+func (n *ParenthesizedExpressionNode) String() string { return fmt.Sprintf("(%s)", n.Node.String()) }
 
 func (n *ParenthesizedExpressionNode) Accept(visitor Visitor) error {
-	return visitor.VisitParenthesizedExpression(n)
+    return visitor.VisitParenthesizedExpression(n)
 }
 
 type LogicalNegationNode struct {
-	Op   token.Token
-	Node ExpressionNode
+    Op   token.Token
+    Node ExpressionNode
 }
 
 func NewLogicalNegationNode(op token.Token, node ExpressionNode) *LogicalNegationNode {
-	return &LogicalNegationNode{
-		Op:   op,
-		Node: node,
-	}
+    return &LogicalNegationNode{
+        Op:   op,
+        Node: node,
+    }
 }
 
 func (n *LogicalNegationNode) Expression() {}
+func (n *LogicalNegationNode) String() string {
+    return fmt.Sprintf("%s %s", n.Op.TokenType.String(), n.Node.String())
+}
 
 func (n *LogicalNegationNode) Accept(visitor Visitor) error {
-	return visitor.VisitLogicalNegationNode(n)
+    return visitor.VisitLogicalNegationNode(n)
 }
 
 type UnaryExpressionNode struct {
-	Op   token.Token
-	Node ExpressionNode
+    Op   token.Token
+    Node ExpressionNode
 }
 
 func NewUnaryExpressionNode(op token.Token, node ExpressionNode) *UnaryExpressionNode {
-	return &UnaryExpressionNode{
-		Op:   op,
-		Node: node,
-	}
+    return &UnaryExpressionNode{
+        Op:   op,
+        Node: node,
+    }
 }
 
 func (n *UnaryExpressionNode) Expression() {}
+func (n *UnaryExpressionNode) String() string {
+    return fmt.Sprintf("%s %s", n.Op.TokenType.String(), n.Node.String())
+}
 
 func (n *UnaryExpressionNode) Accept(visitor Visitor) error {
-	return visitor.VisitUnaryExpressionNode(n)
+    return visitor.VisitUnaryExpressionNode(n)
 }
 
 type BinaryExpressionNode struct {
-	Op    token.Token
-	Left  ExpressionNode
-	Right ExpressionNode
+    Op    token.Token
+    Left  ExpressionNode
+    Right ExpressionNode
 }
 
 func NewBinaryExpressionNode(op token.Token, left, right ExpressionNode) *BinaryExpressionNode {
-	return &BinaryExpressionNode{
-		Op:    op,
-		Left:  left,
-		Right: right,
-	}
+    return &BinaryExpressionNode{
+        Op:    op,
+        Left:  left,
+        Right: right,
+    }
 }
 
 func (n *BinaryExpressionNode) Expression() {}
+func (n *BinaryExpressionNode) String() string {
+    return fmt.Sprintf("%s %s %s", n.Left, n.Op.TokenType.String(), n.Right)
+}
 
 func (n *BinaryExpressionNode) Accept(visitor Visitor) error {
-	return visitor.VisitBinaryExpressionNode(n)
+    return visitor.VisitBinaryExpressionNode(n)
 }
 
 type StringLiteralNode struct {
-	Value string
+    Value string
 }
 
 func NewStringLiteralNode(value string) *StringLiteralNode {
-	return &StringLiteralNode{Value: value}
+    return &StringLiteralNode{Value: value}
 }
 
 func (n *StringLiteralNode) Accept(visitor Visitor) error {
-	return visitor.VisitStringLiteralNode(n)
+    return visitor.VisitStringLiteralNode(n)
 }
 
-func (n *StringLiteralNode) Expression() {}
+func (n *StringLiteralNode) Expression()    {}
+func (n *StringLiteralNode) String() string { return n.Value }
 func (n *StringLiteralNode) CanInt() bool {
-	if n.CanFloat() {
-		return false
-	}
-	return true
+    if n.CanFloat() {
+        return false
+    }
+    return true
 }
 func (n *StringLiteralNode) CanFloat() bool {
-	if _, err := strconv.ParseFloat(n.Value, 64); err == nil {
-		return true
-	}
-	return false
+    if _, err := strconv.ParseFloat(n.Value, 64); err == nil {
+        return true
+    }
+    return false
 }
 func (n *StringLiteralNode) ToInt64() int64 {
-	v, err := strconv.ParseInt(n.Value, 10, 64)
-	if err != nil {
-		return 0
-	}
-	return v
+    v, err := strconv.ParseInt(n.Value, 10, 64)
+    if err != nil {
+        return 0
+    }
+    return v
 }
 func (n *StringLiteralNode) ToFloat64() float64 {
-	v, err := strconv.ParseFloat(n.Value, 64)
-	if err != nil {
-		return 0
-	}
-	return v
+    v, err := strconv.ParseFloat(n.Value, 64)
+    if err != nil {
+        return 0
+    }
+    return v
 }
 
 type IntegerLiteralNode struct {
-	Value int64
+    Value int64
 }
 
 func NewIntegerLiteralNode(value int64) *IntegerLiteralNode {
-	return &IntegerLiteralNode{Value: value}
+    return &IntegerLiteralNode{Value: value}
 }
 
 func (n *IntegerLiteralNode) Accept(visitor Visitor) error {
-	return visitor.VisitIntegerLiteralNode(n)
+    return visitor.VisitIntegerLiteralNode(n)
 }
 
 func (n *IntegerLiteralNode) Expression()        {}
+func (n *IntegerLiteralNode) String() string     { return strconv.FormatInt(n.Value, 10) }
 func (n *IntegerLiteralNode) CanInt() bool       { return true }
 func (n *IntegerLiteralNode) CanFloat() bool     { return true }
 func (n *IntegerLiteralNode) ToInt64() int64     { return n.Value }
 func (n *IntegerLiteralNode) ToFloat64() float64 { return float64(n.Value) }
 
 type FloatLiteralNode struct {
-	Value float64
+    Value float64
 }
 
 func NewFloatLiteralNode(value float64) *FloatLiteralNode {
-	return &FloatLiteralNode{Value: value}
+    return &FloatLiteralNode{Value: value}
 }
 
 func (n *FloatLiteralNode) Accept(visitor Visitor) error {
-	return visitor.VisitFloatLiteralNode(n)
+    return visitor.VisitFloatLiteralNode(n)
 }
 
 func (n *FloatLiteralNode) Expression()        {}
+func (n *FloatLiteralNode) String() string     { return strconv.FormatFloat(n.Value, 'g', -1, 64) }
 func (n *FloatLiteralNode) CanInt() bool       { return false } // avoid lossy truncation
 func (n *FloatLiteralNode) CanFloat() bool     { return true }
 func (n *FloatLiteralNode) ToInt64() int64     { panic("attempt to convert float to int") }
@@ -280,23 +306,24 @@ func (n *FloatLiteralNode) ToFloat64() float64 { return n.Value }
 type AsteriskLiteralNode struct{}
 
 func NewAsteriskLiteralNode() *AsteriskLiteralNode {
-	return &AsteriskLiteralNode{}
+    return &AsteriskLiteralNode{}
 }
 
-func (n *AsteriskLiteralNode) Expression() {}
+func (n *AsteriskLiteralNode) Expression()    {}
+func (n *AsteriskLiteralNode) String() string { return "*" }
 
 func (n *AsteriskLiteralNode) Accept(visitor Visitor) error {
-	return visitor.VisitAsteriskLiteralNode(n)
+    return visitor.VisitAsteriskLiteralNode(n)
 }
 
 type LimitNode struct {
-	Limit IntegerLiteralNode
+    Limit IntegerLiteralNode
 }
 
 func NewLimitNode(limit IntegerLiteralNode) *LimitNode {
-	return &LimitNode{Limit: limit}
+    return &LimitNode{Limit: limit}
 }
 
 func (n *LimitNode) Accept(visitor Visitor) error {
-	return visitor.VisitLimitNode(n)
+    return visitor.VisitLimitNode(n)
 }

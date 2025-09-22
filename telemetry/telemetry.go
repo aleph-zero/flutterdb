@@ -19,6 +19,10 @@ import (
 
 const systemName = "flutterdb"
 
+type IgnoreExporterErrorsHandler struct{}
+
+func (IgnoreExporterErrorsHandler) Handle(err error) {} // swallow otel errors so they don't spam stdout
+
 func New(service, version string, collectorURL string) (func(), error) {
     ctx := context.Background()
 
@@ -39,6 +43,7 @@ func New(service, version string, collectorURL string) (func(), error) {
     tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(te), sdktrace.WithResource(res))
     otel.SetTracerProvider(tp)
     otel.SetTextMapPropagator(propagation.TraceContext{})
+    otel.SetErrorHandler(IgnoreExporterErrorsHandler{})
 
     me, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(collectorURL), otlpmetrichttp.WithInsecure())
     mp := metric.NewMeterProvider(

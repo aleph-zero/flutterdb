@@ -43,25 +43,39 @@ type QueryHandler struct {
     service query.Service
 }
 
+func NewQueryHandler(svc query.Service) QueryHandler {
+    return QueryHandler{service: svc}
+}
+
 func (h *QueryHandler) Query(w http.ResponseWriter, r *http.Request) {
     q := r.URL.Query().Get("q")
-    _, err := h.service.Execute(r.Context(), q)
+    result, err := h.service.Execute(r.Context(), q)
     if err != nil {
         w.WriteHeader(http.StatusInternalServerError)
         return
     }
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
+
+    response := &QueryResponse{result}
+    render.Status(r, http.StatusOK)
+    render.Render(w, r, response)
 }
 
-func NewQueryHandler(svc query.Service) QueryHandler {
-    return QueryHandler{service: svc}
+type QueryResponse struct {
+    *query.QueryResult
+}
+
+func (q *QueryResponse) Render(w http.ResponseWriter, r *http.Request) error {
+    return nil
 }
 
 /* *** Indexer API *** */
 
 type IndexerHandler struct {
     service index.Service
+}
+
+func NewIndexerHandler(svc index.Service) IndexerHandler {
+    return IndexerHandler{service: svc}
 }
 
 func (i *IndexerHandler) Index(w http.ResponseWriter, r *http.Request) {
@@ -96,10 +110,6 @@ type DocumentIndexResponse struct{}
 
 func (d *DocumentIndexResponse) Render(w http.ResponseWriter, r *http.Request) error {
     return nil
-}
-
-func NewIndexerHandler(svc index.Service) IndexerHandler {
-    return IndexerHandler{service: svc}
 }
 
 func IndexContext(next http.Handler) http.Handler {

@@ -63,47 +63,33 @@ func (t *TableIdentifierResolver) VisitTableIdentifierNode(node *ast.TableIdenti
 func (t *TableIdentifierResolver) VisitSelectStatementNode(node *ast.SelectStatementNode) error {
     return node.Table.Accept(t)
 }
-
 func (t *TableIdentifierResolver) VisitPredicateNode(*ast.PredicateNode) error { return nil }
-
 func (t *TableIdentifierResolver) VisitCreateTableStatementNode(*ast.CreateTableStatementNode) error {
     return nil
 }
-
+func (t *TableIdentifierResolver) VisitShowTablesStatementNode(*ast.ShowTablesStatementNode) error {
+    return nil
+}
 func (t *TableIdentifierResolver) VisitColumnDefinitionNode(*ast.ColumnDefinitionNode) error {
     return nil
 }
-
 func (t *TableIdentifierResolver) VisitColumnIdentifierNode(*ast.ColumnIdentifierNode) error {
     return nil
 }
-
 func (t *TableIdentifierResolver) VisitExpressionNode(*ast.ExpressionNode) error { return nil }
-
 func (t *TableIdentifierResolver) VisitParenthesizedExpression(*ast.ParenthesizedExpressionNode) error {
     return nil
 }
-
-func (t *TableIdentifierResolver) VisitLogicalNegationNode(*ast.LogicalNegationNode) error {
-    return nil
-}
-func (t *TableIdentifierResolver) VisitUnaryExpressionNode(*ast.UnaryExpressionNode) error {
-    return nil
-}
+func (t *TableIdentifierResolver) VisitLogicalNegationNode(*ast.LogicalNegationNode) error { return nil }
+func (t *TableIdentifierResolver) VisitUnaryExpressionNode(*ast.UnaryExpressionNode) error { return nil }
 func (t *TableIdentifierResolver) VisitBinaryExpressionNode(*ast.BinaryExpressionNode) error {
     return nil
 }
-func (t *TableIdentifierResolver) VisitStringLiteralNode(*ast.StringLiteralNode) error { return nil }
-func (t *TableIdentifierResolver) VisitIntegerLiteralNode(node *ast.IntegerLiteralNode) error {
-    return nil
-}
-func (t *TableIdentifierResolver) VisitFloatLiteralNode(node *ast.FloatLiteralNode) error {
-    return nil
-}
-func (t *TableIdentifierResolver) VisitAsteriskLiteralNode(*ast.AsteriskLiteralNode) error {
-    return nil
-}
-func (t *TableIdentifierResolver) VisitLimitNode(*ast.LimitNode) error { return nil }
+func (t *TableIdentifierResolver) VisitStringLiteralNode(*ast.StringLiteralNode) error     { return nil }
+func (t *TableIdentifierResolver) VisitIntegerLiteralNode(*ast.IntegerLiteralNode) error   { return nil }
+func (t *TableIdentifierResolver) VisitFloatLiteralNode(*ast.FloatLiteralNode) error       { return nil }
+func (t *TableIdentifierResolver) VisitAsteriskLiteralNode(*ast.AsteriskLiteralNode) error { return nil }
+func (t *TableIdentifierResolver) VisitLimitNode(*ast.LimitNode) error                     { return nil }
 
 /* *** Column Identifier Resolver *** */
 
@@ -199,6 +185,10 @@ func (c *ColumnIdentifierResolver) VisitCreateTableStatementNode(node *ast.Creat
     if !found {
         return fmt.Errorf("invalid partition column '%s' does not exist in column definition list", node.Partition)
     }
+    return nil
+}
+
+func (c *ColumnIdentifierResolver) VisitShowTablesStatementNode(node *ast.ShowTablesStatementNode) error {
     return nil
 }
 
