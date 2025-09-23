@@ -34,7 +34,7 @@ func (operator *ProjectOperator) Open(ctx context.Context) error {
         defer close(operator.sink)
         for result := range operator.source {
             for k, _ := range result.Record.Values {
-                if !exists(k, operator.columns) {
+                if operator.columns != nil && len(operator.columns) > 0 && !exists(k, operator.columns) {
                     delete(result.Record.Values, k)
                 }
             }

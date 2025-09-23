@@ -87,11 +87,14 @@ func (op *OperatorNodeOpener) VisitScanOperator(ctx context.Context, operator *S
     return operator.Open(ctx)
 }
 
-func (op *OperatorNodeOpener) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
-    panic("implement me")
+func (op *OperatorNodeOpener) VisitShowTablesOperator(ctx context.Context, operator *ShowTablesOperator) error {
+    if err := operator.Open(ctx); err != nil {
+        return err
+    }
+    return nil
 }
 
-func (op *OperatorNodeOpener) VisitShowTablesOperator(ctx context.Context, operator *ShowTablesOperator) error {
+func (op *OperatorNodeOpener) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
     panic("implement me")
 }
 
@@ -109,7 +112,7 @@ func (lpv *LogicalPlanVisitor) VisitTableNode(node *logical.TableNode) error {
 }
 
 func (lpv *LogicalPlanVisitor) VisitTablesNode(node *logical.TablesNode) error {
-    lpv.operator = NewShowTablesOperator()
+    lpv.operator = NewShowTablesOperator(lpv.metaSvc)
     return nil
 }
 
