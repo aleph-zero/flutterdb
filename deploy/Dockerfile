@@ -8,7 +8,7 @@
 
 ################################################################################
 # Create a stage for building the application.
-ARG GO_VERSION=1.23.4
+ARG GO_VERSION=1.25.1
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION} AS build
 WORKDIR /src
 
@@ -73,6 +73,16 @@ COPY --from=build /bin/flutterdb /bin/
 
 # Expose the port that the application listens on.
 EXPOSE 1234
+
+# Bootstrap empty metastore
+USER root
+RUN mkdir -p .metastore
+RUN touch .metastore/metastore.json
+RUN echo "{}" > .metastore/metastore.json
+USER appuser
+
+# Setup open telemetry
+ENV OTEL_EXPORTER_OTLP_ENDPOINT="localhost:4318"
 
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/flutterdb", "server" ]

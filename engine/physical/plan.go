@@ -40,6 +40,12 @@ func (plan *QueryPlan) Execute(ctx context.Context) ([]*engine.Result, error) {
     }
 
     wg.Wait()
+
+    stats := &OperatorStatsCollector{}
+    if err := plan.RootOperator.Accept(ctx, stats); err != nil {
+        return nil, err
+    }
+
     return results, nil
 }
 
@@ -50,6 +56,40 @@ type OperatorNodeVisitor interface {
     VisitScanOperator(context.Context, *ScanOperator) error
     VisitCreateOperator(context.Context, *CreateOperator) error
     VisitShowTablesOperator(context.Context, *ShowTablesOperator) error
+}
+
+/* *** operator stats collector *** */
+
+type OperatorStatsCollector struct{}
+
+func (osc *OperatorStatsCollector) VisitFilterOperator(ctx context.Context, operator *FilterOperator) error {
+
+    panic("implement me")
+}
+
+func (osc *OperatorStatsCollector) VisitLimitOperator(ctx context.Context, operator *LimitOperator) error {
+
+    panic("implement me")
+}
+
+func (osc *OperatorStatsCollector) VisitProjectOperator(ctx context.Context, operator *ProjectOperator) error {
+    // TODO implement me
+    panic("implement me")
+}
+
+func (osc *OperatorStatsCollector) VisitScanOperator(ctx context.Context, operator *ScanOperator) error {
+    // TODO implement me
+    panic("implement me")
+}
+
+func (osc *OperatorStatsCollector) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
+    // TODO implement me
+    panic("implement me")
+}
+
+func (osc *OperatorStatsCollector) VisitShowTablesOperator(ctx context.Context, operator *ShowTablesOperator) error {
+    // TODO implement me
+    panic("implement me")
 }
 
 type OperatorNode interface {
@@ -97,6 +137,8 @@ func (op *OperatorNodeOpener) VisitShowTablesOperator(ctx context.Context, opera
 func (op *OperatorNodeOpener) VisitCreateOperator(ctx context.Context, operator *CreateOperator) error {
     panic("implement me")
 }
+
+/* *** operator stats collector *** */
 
 /* *** logical plan visitor *** */
 
