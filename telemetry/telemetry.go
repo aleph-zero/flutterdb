@@ -45,6 +45,10 @@ func New(service, version string, collectorURL string) (func(), error) {
     otel.SetTextMapPropagator(propagation.TraceContext{})
 
     me, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(collectorURL), otlpmetrichttp.WithInsecure())
+    if err != nil {
+        return nil, err
+    }
+
     mp := metric.NewMeterProvider(
         metric.WithResource(res),
         metric.WithReader(metric.NewPeriodicReader(
